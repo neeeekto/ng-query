@@ -1,5 +1,6 @@
 import {
   debounceTime,
+  filter,
   interval,
   map,
   merge,
@@ -57,6 +58,6 @@ export class QueryTrigger extends Observable<TriggerEvent> {
       );
     }
 
-    this.src$ = merge(...triggers).pipe(debounceTime(10));
+    this.src$ = merge(...triggers).pipe(debounceTime(10), filter(Boolean));
   }
 }

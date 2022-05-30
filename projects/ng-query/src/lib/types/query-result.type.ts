@@ -18,7 +18,7 @@ export interface IQueryResult<
   readonly isLoadingError: boolean;
   readonly isRefetchError: boolean;
   readonly isRefetching: boolean;
-  readonly isStale: boolean;
+  isStale(): boolean;
   readonly isSuccess: boolean;
   readonly status: QueryStatus;
   readonly query: IQuery;

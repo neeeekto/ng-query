@@ -1,27 +1,16 @@
 import { QueryResult } from '../query-result';
 import { QueryBaseConfig } from '../types/query-config.type';
+import { DefaulQueryConfigForTest } from './seed-work/query-config';
+import { fakeAsync, tick } from '@angular/core/testing';
 
 describe('QueryResult', () => {
-  const DefaulQueryConfig: QueryBaseConfig = {
-    cacheTime: 5 * 60 * 1000,
-    refetchInterval: false,
-    refetchIntervalInBackground: false,
-    refetchOnArgumentChange: true,
-    refetchOnReconnect: true,
-    refetchOnSubscribe: true,
-    refetchOnWindowFocus: true,
-    retry: 3,
-    retryDelay: 1000,
-    staleTime: 10000,
-  };
-
   it('should be created', () => {
-    const result = new QueryResult(DefaulQueryConfig, { refecth() {} });
+    const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
     expect(result).toBeTruthy();
   });
 
   it('can have idle status', () => {
-    const result = new QueryResult(DefaulQueryConfig, { refecth() {} });
+    const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
     result.toIdle();
     const value = result.getValue();
     expect(value.data).toBeUndefined();
@@ -33,16 +22,16 @@ describe('QueryResult', () => {
     expect(value.isError).toBeFalse();
     expect(value.isIdle).toBeTrue();
     expect(value.isFetched).toBeFalse();
-    expect(value.isStale).toBeTrue();
     expect(value.isSuccess).toBeFalse();
     expect(value.isLoading).toBeFalse();
     expect(value.isLoadingError).toBeFalse();
     expect(value.isRefetchError).toBeFalse();
     expect(value.isRefetching).toBeFalse();
+    expect(value.isStale()).toBeTrue();
   });
 
   it('can have loading status', () => {
-    const result = new QueryResult(DefaulQueryConfig, { refecth() {} });
+    const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
     result.toLoading();
     const value = result.getValue();
     expect(value.data).toBeUndefined();
@@ -54,7 +43,7 @@ describe('QueryResult', () => {
     expect(value.isError).toBeFalse();
     expect(value.isIdle).toBeFalse();
     expect(value.isFetched).toBeFalse();
-    expect(value.isStale).toBeTrue();
+    expect(value.isStale()).toBeTrue();
     expect(value.isSuccess).toBeFalse();
     expect(value.isLoading).toBeTrue();
     expect(value.isLoadingError).toBeFalse();
@@ -63,7 +52,7 @@ describe('QueryResult', () => {
   });
 
   it('can have success status', () => {
-    const result = new QueryResult(DefaulQueryConfig, { refecth() {} });
+    const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
     const data = [1, 2, 3];
     const now = Date.now();
     result.toSuccess(data);
@@ -77,7 +66,7 @@ describe('QueryResult', () => {
     expect(value.isError).toBeFalse();
     expect(value.isIdle).toBeFalse();
     expect(value.isFetched).toBeTrue();
-    expect(value.isStale).toBeFalse();
+    expect(value.isStale()).toBeFalse();
     expect(value.isSuccess).toBeTrue();
     expect(value.isLoading).toBeFalse();
     expect(value.isLoadingError).toBeFalse();
@@ -86,10 +75,10 @@ describe('QueryResult', () => {
   });
 
   it('can have error status', () => {
-    const result = new QueryResult(DefaulQueryConfig, { refecth() {} });
+    const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
     const now = Date.now();
     const error = new Error();
-    result.toError(error);
+    result.toError(error, true);
     const value = result.getValue();
     expect(value.data).toBeUndefined();
     expect(value.dataUpdatedAt).toBeLessThan(now);
@@ -100,7 +89,7 @@ describe('QueryResult', () => {
     expect(value.isError).toBeTrue();
     expect(value.isIdle).toBeFalse();
     expect(value.isFetched).toBeFalse();
-    expect(value.isStale).toBeTrue();
+    expect(value.isStale()).toBeTrue();
     expect(value.isSuccess).toBeFalse();
     expect(value.isLoading).toBeFalse();
     expect(value.isLoadingError).toBeTrue();
@@ -108,24 +97,101 @@ describe('QueryResult', () => {
     expect(value.isRefetching).toBeFalse();
   });
 
+  it('calculate correct isStale flag', fakeAsync(() => {
+    const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+    result.toSuccess('test');
+    tick(11000);
+    const value = result.getValue();
+    expect(value.isStale()).toBeTrue();
+  }));
+
   describe('transitions', () => {
     it('idle -> loading', () => {
-      // TODO
+      const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+      result.toIdle();
+      let value = result.getValue();
+      expect(value.isLoading).toBeFalse();
+      result.toLoading();
+      value = result.getValue();
+      expect(value.isLoading).toBeTrue();
     });
 
     it('loading -> success', () => {
-      // TODO
+      const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+      result.toLoading();
+      let value = result.getValue();
+      expect(value.isLoading).toBeTrue();
+      expect(value.data).toBeUndefined();
+      result.toSuccess([]);
+      value = result.getValue();
+      expect(value.isLoading).toBeFalse();
+      expect(value.data).not.toBeUndefined();
     });
 
     it('loading -> error', () => {
-      // TODO
+      const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+      result.toLoading();
+      let value = result.getValue();
+      expect(value.isLoading).toBeTrue();
+      expect(value.failureCount).toBe(0);
+      result.toError(new Error(''), true);
+      value = result.getValue();
+      expect(value.isLoading).toBeFalse();
+      expect(value.failureCount).toBe(1);
     });
 
     it('loading -> error -> error', () => {
-      // TODO
+      const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+      result.toLoading();
+      let value = result.getValue();
+      expect(value.isLoading).toBeTrue();
+      expect(value.failureCount).toBe(0);
+      result.toError(new Error(''), true);
+      value = result.getValue();
+      expect(value.isLoading).toBeFalse();
+      expect(value.failureCount).toBe(1);
+      result.toLoading();
+      value = result.getValue();
+      expect(value.failureCount).toBe(1);
+      result.toError(new Error(''), true);
+      value = result.getValue();
+      expect(value.isLoading).toBeFalse();
+      expect(value.failureCount).toBe(2);
     });
     it('loading -> error -> success', () => {
-      // TODO
+      const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+      result.toLoading();
+      let value = result.getValue();
+      expect(value.isLoading).toBeTrue();
+      expect(value.failureCount).toBe(0);
+      result.toError(new Error(''), true);
+      value = result.getValue();
+      expect(value.isLoading).toBeFalse();
+      expect(value.failureCount).toBe(1);
+      result.toSuccess([]);
+      value = result.getValue();
+      expect(value.failureCount).toBe(0);
+      expect(value.data).not.toBeUndefined();
+    });
+    it('loading -> error -> success -> error', () => {
+      const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+      result.toLoading();
+      let value = result.getValue();
+      expect(value.isLoading).toBeTrue();
+      expect(value.failureCount).toBe(0);
+      result.toError(new Error(''), true);
+      value = result.getValue();
+      expect(value.isLoading).toBeFalse();
+      expect(value.failureCount).toBe(1);
+      result.toSuccess([]);
+      value = result.getValue();
+      expect(value.failureCount).toBe(0);
+      expect(value.data).not.toBeUndefined();
+      result.toLoading();
+      result.toError(new Error(), true);
+      value = result.getValue();
+      expect(value.failureCount).toBe(1);
+      expect(value.data).not.toBeUndefined();
     });
   });
 
@@ -134,10 +200,10 @@ describe('QueryResult', () => {
       const initData: any[] = [1, 2, 3];
       const result = new QueryResult(
         {
-          ...DefaulQueryConfig,
+          ...DefaulQueryConfigForTest,
           initialData: initData,
         },
-        { refecth() {} }
+        { refeth() {} }
       );
       result.toIdle();
       const value = result.getValue();
@@ -148,10 +214,10 @@ describe('QueryResult', () => {
       const initData: any[] = [1, 2, 3];
       const result = new QueryResult(
         {
-          ...DefaulQueryConfig,
+          ...DefaulQueryConfigForTest,
           initialData: () => initData,
         },
-        { refecth() {} }
+        { refeth() {} }
       );
       result.toIdle();
       const value = result.getValue();
@@ -162,11 +228,11 @@ describe('QueryResult', () => {
       const now = Date.now();
       const result = new QueryResult(
         {
-          ...DefaulQueryConfig,
+          ...DefaulQueryConfigForTest,
           initialData: initData,
           initialDataUpdatedAt: now,
         },
-        { refecth() {} }
+        { refeth() {} }
       );
       result.toIdle();
       const value = result.getValue();
@@ -177,10 +243,10 @@ describe('QueryResult', () => {
       const now = Date.now();
       const result = new QueryResult(
         {
-          ...DefaulQueryConfig,
+          ...DefaulQueryConfigForTest,
           initialDataUpdatedAt: now,
         },
-        { refecth() {} }
+        { refeth() {} }
       );
       result.toIdle();
       const value = result.getValue();
@@ -188,7 +254,35 @@ describe('QueryResult', () => {
     });
 
     it('can have placeholder data', () => {
-      // TODO
+      const data = [1];
+      const result = new QueryResult(
+        {
+          ...DefaulQueryConfigForTest,
+          placeholderData: () => data,
+        },
+        { refeth() {} }
+      );
+      result.toLoading();
+      const val = result.getValue();
+      expect(val.isLoading).toBeTrue();
+      expect(val.data).toBe(data);
+    });
+    it('cannot have placeholder data if have initial data', () => {
+      const data = [1];
+      const placeholder = [2];
+      const result = new QueryResult(
+        {
+          ...DefaulQueryConfigForTest,
+          initialData: data,
+          placeholderData: placeholder,
+        },
+        { refeth() {} }
+      );
+      result.toLoading();
+      const val = result.getValue();
+      expect(val.isLoading).toBeTrue();
+      expect(val.data).toBe(data);
+      expect(val.data).not.toBe(placeholder);
     });
   });
 });

@@ -1,3 +1,3 @@
 export interface IQuery {
-  refecth(): void;
+  refeth(): void;
 }

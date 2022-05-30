@@ -21,6 +21,7 @@ export class QueryResult<
     private readonly query: IQuery
   ) {
     super(null!);
+    this.toIdle();
   }
   toIdle() {
     this._data = this.makeInitData();
@@ -45,8 +46,10 @@ export class QueryResult<
     this.next(this.makeResult());
   }
 
-  toError(error: TError) {
-    this._status = 'error';
+  toError(error: TError, final: boolean = false) {
+    if (final) {
+      this._status = 'error';
+    }
     this._error = error;
     this._failureCount++;
     this._errorUpdatedAt = Date.now();
@@ -65,6 +68,7 @@ export class QueryResult<
     this.next(this.makeResult());
   }
 
+  // Is not fresh
   get isStale() {
     return this._dataUpdatedAt + this.queryConfig.staleTime < Date.now();
   }
@@ -77,6 +81,7 @@ export class QueryResult<
     return this._data;
   }
 
+  // We create new object for OnPush strategy in Angular
   private makeResult(): IQueryResult<TQueryData, TError, TData> {
     const isError = this._status === 'error';
     return {
@@ -94,8 +99,9 @@ export class QueryResult<
       isRefetchError: isError && this._isFetched,
       isRefetching: this._isFetched && this.isLoading,
       isSuccess: this._status === 'success',
-      isStale: this._dataUpdatedAt + this.queryConfig.staleTime < Date.now(),
+
       query: this.query,
+      isStale: () => this.isStale,
     };
   }
 

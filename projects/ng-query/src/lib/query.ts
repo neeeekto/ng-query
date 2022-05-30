@@ -13,6 +13,7 @@ import {
   retryWhen,
   scan,
   Subject,
+  Subscription,
   switchMap,
   tap,
   throwError,
@@ -21,7 +22,6 @@ import {
 import { QueryResult } from './query-result';
 import { QueryConfig } from './types/query-config.type';
 import { QueryTrigger } from './query-trigger';
-import { GlobalTriggers } from './global-triggers';
 import { IQueryResult } from './types/query-result.type';
 import { Key } from './types/key.type';
 
@@ -37,6 +37,7 @@ export class Query<
   private readonly refetch$ = new Subject<any>();
   private readonly onSubscribe$ = new Subject<any>();
   private readonly result$: QueryResult<TQueryData, TError, TData>;
+  private loaderSubscription?: Subscription;
 
   constructor(
     private readonly key: Key[],
@@ -48,8 +49,10 @@ export class Query<
     super((subscriber) => {
       this.subscribers++;
       const resultSubscription = this.result$.subscribe(subscriber);
-      const loaderSubscription = this.loader$.subscribe();
-      resultSubscription.add(loaderSubscription);
+      if (this.loaderSubscription == undefined) {
+        // Once, lazy subscription
+        this.loaderSubscription = this.loader$.subscribe();
+      }
       resultSubscription.add(() => {
         this.subscribers--;
         if (this.subscribers === 0) {
@@ -63,7 +66,7 @@ export class Query<
     });
     this.arg$ = new BehaviorSubject<any>(initialArgs);
     this.result$ = new QueryResult<TQueryData, TError, TData>(this.config, {
-      refecth: () => this.refecth(),
+      refeth: () => this.refeth(),
     });
     const emitter$ = this.createEmitter();
     this.loader$ = this.createLoader(emitter$);
@@ -73,8 +76,12 @@ export class Query<
     this.arg$.next(arg);
   }
 
-  private refecth() {
+  refeth() {
     this.refetch$.next(null);
+  }
+
+  get lastResult() {
+    return this.result$.getValue();
   }
 
   private createEmitter() {
@@ -88,13 +95,13 @@ export class Query<
             (trigger.type === 'online' &&
               this.config.refetchOnReconnect !== 'always')
           ) {
-            return !this.result$.isStale;
+            return this.result$.isStale;
           }
           return true;
         })
       ),
       this.arg$.pipe(
-        distinctUntilChanged(),
+        distinctUntilChanged(this.config.argumentComparator),
         filter(() => this.config.refetchOnArgumentChange)
       ),
       iif(
@@ -103,7 +110,7 @@ export class Query<
           filter(() => {
             return (
               this.config.refetchOnSubscribe === 'always' ||
-              !this.result$.isStale
+              this.result$.isStale
             );
           })
         ),
@@ -124,7 +131,7 @@ export class Query<
         }
         this.result$.toSuccess(newData);
       },
-      error: (err) => this.result$.toError(err),
+      error: (err) => this.result$.toError(err, true),
     });
     return emitter$.pipe(
       filter(() => !this.result$.value.isLoading),
@@ -156,10 +163,12 @@ export class Query<
         mergeMap((retryResult) => {
           if (typeof this.config.retry === 'function') {
             if (this.config.retry(retryResult.count, retryResult.error)) {
+              this.result$.toError(retryResult.error);
               return of(retryResult);
             }
           }
           if (this.config.retry > retryResult.count) {
+            this.result$.toError(retryResult.error);
             return of(retryResult);
           }
           return throwError(retryResult.error);

@@ -55,6 +55,7 @@ export interface QueryBaseConfig {
   refetchOnSubscribe: boolean | 'always';
 
   refetchOnArgumentChange: boolean;
+  argumentComparator?: (prev: any, next: any) => boolean;
 }
 
 export interface QueryConfig<
