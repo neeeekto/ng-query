@@ -1,1 +1,2 @@
-export type Key = string | number | readonly unknown[];
+export type KeyItem = string | number | null | undefined;
+export type Key = KeyItem[];

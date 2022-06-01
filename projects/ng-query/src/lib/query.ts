@@ -24,6 +24,7 @@ import { QueryConfig } from './types/query-config.type';
 import { QueryTrigger } from './query-trigger';
 import { IQueryResult } from './types/query-result.type';
 import { Key } from './types/key.type';
+import { IGcPlaner } from './types/gc.type';
 
 export class Query<
   TQueryData = any,
@@ -40,11 +41,12 @@ export class Query<
   private loaderSubscription?: Subscription;
 
   constructor(
-    private readonly key: Key[],
+    public readonly key: Key,
     private readonly config: QueryConfig<TQueryData, TData>,
     private readonly srcFactory: (args: any) => Observable<TQueryData>,
     initialArgs: any,
-    private readonly trigger$: QueryTrigger
+    private readonly trigger$: QueryTrigger,
+    private readonly gcPlanner: IGcPlaner
   ) {
     super((subscriber) => {
       this.subscribers++;
@@ -52,6 +54,18 @@ export class Query<
       if (this.loaderSubscription == undefined) {
         // Once, lazy subscription
         this.loaderSubscription = this.loader$.subscribe();
+
+        this.gcPlanner.schedule(() => {
+          const needClean =
+            this.lastResult.dataUpdatedAt + this.config.cacheTime <
+              Date.now() && this.subscribers === 0;
+          if (needClean) {
+            this.loaderSubscription?.unsubscribe();
+            this.loaderSubscription = undefined;
+            this.result$.toIdle();
+          }
+          return needClean;
+        }, this.config.cacheTime);
       }
       resultSubscription.add(() => {
         this.subscribers--;
@@ -78,6 +92,10 @@ export class Query<
 
   refeth() {
     this.refetch$.next(null);
+  }
+
+  update(data: TData) {
+    this.toSuccess(data);
   }
 
   get lastResult() {
@@ -120,16 +138,20 @@ export class Query<
     );
   }
 
+  private toSuccess(newData: TData) {
+    const prevData = this.result$.data;
+    if (this.config.isDataEqual?.(prevData, newData) ?? false) {
+      newData = prevData as any;
+    }
+    this.result$.toSuccess(newData);
+  }
+
   private createLoader(emitter$: Observable<any>) {
     const errorRetry = this.createErrorRetry();
     const resultHandler = tap({
       next: (data: TQueryData) => {
-        const prevData = this.result$.data;
         let newData: TData = this.config.select?.(data) ?? (data as any);
-        if (this.config.isDataEqual?.(prevData, newData) ?? false) {
-          newData = prevData as any;
-        }
-        this.result$.toSuccess(newData);
+        this.toSuccess(newData);
       },
       error: (err) => this.result$.toError(err, true),
     });
