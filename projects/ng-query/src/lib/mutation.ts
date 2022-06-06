@@ -1,4 +1,5 @@
-import { BehaviorSubject, Observable, take } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { Key } from './types/key.type';
 
 export class Mutation<TRes = any> extends Observable<Mutation<TRes>> {
