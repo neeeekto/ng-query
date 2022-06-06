@@ -1,5 +1,5 @@
-import { Inject, Injectable, Optional } from '@angular/core';
-import { fromEvent, Observable, Subject } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 import { Key } from './types/key.type';
 import { QueryConfig } from './types/query-config.type';
 import { Query } from './query';
@@ -9,7 +9,6 @@ import { QueryStore } from './query-store';
 import { ArgumentTypes, FunctionType } from './types/common.type';
 import { QueryConfigFactory } from './query-config-factory';
 import { GcPlanner } from './gc-planner';
-import { IGcPlaner } from './types/gc.type';
 
 @Injectable()
 export class QueryFactory {

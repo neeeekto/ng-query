@@ -1,24 +1,26 @@
 import {
   BehaviorSubject,
-  delayWhen,
-  distinctUntilChanged,
   EMPTY,
-  filter,
   iif,
-  merge,
-  mergeMap,
   MonoTypeOperatorFunction,
   Observable,
   of,
-  retryWhen,
-  scan,
   Subject,
   Subscription,
-  switchMap,
-  tap,
   throwError,
   timer,
+  merge,
 } from 'rxjs';
+import {
+  switchMap,
+  tap,
+  scan,
+  retryWhen,
+  mergeMap,
+  filter,
+  distinctUntilChanged,
+  delayWhen,
+} from 'rxjs/operators';
 import { QueryResult } from './query-result';
 import { QueryConfig } from './types/query-config.type';
 import { QueryTrigger } from './query-trigger';

@@ -1,14 +1,5 @@
-import {
-  debounceTime,
-  filter,
-  interval,
-  map,
-  merge,
-  mergeAll,
-  Observable,
-  of,
-  startWith,
-} from 'rxjs';
+import { interval, Observable, of, merge } from 'rxjs';
+import { debounceTime, filter, map, mergeAll, startWith } from 'rxjs/operators';
 import {
   FocusTriggerEvent,
   IntervalTriggerEvent,
