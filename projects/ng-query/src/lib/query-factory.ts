@@ -29,7 +29,9 @@ export class QueryFactory {
     keyFactory: (...args: ArgumentTypes<TSrcFactory>) => Key,
     config?: Partial<QueryConfig<TRes, TData>>
   ) {
-    return (...args: ArgumentTypes<TSrcFactory>) => {
+    return (
+      ...args: ArgumentTypes<TSrcFactory>
+    ): Query<TRes, TError, TData> => {
       const key = keyFactory(...args);
       let exist: Query<TRes, TError, TData> | undefined =
         this.queryStore.get(key);
