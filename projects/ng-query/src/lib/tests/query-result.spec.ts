@@ -5,12 +5,12 @@ import { fakeAsync, tick } from '@angular/core/testing';
 
 describe('QueryResult', () => {
   it('should be created', () => {
-    const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+    const result = new QueryResult(DefaulQueryConfigForTest, { refetch() {} });
     expect(result).toBeTruthy();
   });
 
   it('can have idle status', () => {
-    const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+    const result = new QueryResult(DefaulQueryConfigForTest, { refetch() {} });
     result.toIdle();
     const value = result.getValue();
     expect(value.data).toBeUndefined();
@@ -31,7 +31,7 @@ describe('QueryResult', () => {
   });
 
   it('can have loading status', () => {
-    const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+    const result = new QueryResult(DefaulQueryConfigForTest, { refetch() {} });
     result.toLoading();
     const value = result.getValue();
     expect(value.data).toBeUndefined();
@@ -52,7 +52,7 @@ describe('QueryResult', () => {
   });
 
   it('can have success status', () => {
-    const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+    const result = new QueryResult(DefaulQueryConfigForTest, { refetch() {} });
     const data = [1, 2, 3];
     const now = Date.now();
     result.toSuccess(data);
@@ -75,7 +75,7 @@ describe('QueryResult', () => {
   });
 
   it('can have error status', () => {
-    const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+    const result = new QueryResult(DefaulQueryConfigForTest, { refetch() {} });
     const now = Date.now();
     const error = new Error();
     result.toError(error, true);
@@ -98,7 +98,7 @@ describe('QueryResult', () => {
   });
 
   it('calculate correct isStale flag', fakeAsync(() => {
-    const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+    const result = new QueryResult(DefaulQueryConfigForTest, { refetch() {} });
     result.toSuccess('test');
     tick(11000);
     const value = result.getValue();
@@ -107,7 +107,9 @@ describe('QueryResult', () => {
 
   describe('transitions', () => {
     it('idle -> loading', () => {
-      const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+      const result = new QueryResult(DefaulQueryConfigForTest, {
+        refetch() {},
+      });
       result.toIdle();
       let value = result.getValue();
       expect(value.isLoading).toBeFalse();
@@ -117,7 +119,9 @@ describe('QueryResult', () => {
     });
 
     it('loading -> success', () => {
-      const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+      const result = new QueryResult(DefaulQueryConfigForTest, {
+        refetch() {},
+      });
       result.toLoading();
       let value = result.getValue();
       expect(value.isLoading).toBeTrue();
@@ -129,7 +133,9 @@ describe('QueryResult', () => {
     });
 
     it('loading -> error', () => {
-      const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+      const result = new QueryResult(DefaulQueryConfigForTest, {
+        refetch() {},
+      });
       result.toLoading();
       let value = result.getValue();
       expect(value.isLoading).toBeTrue();
@@ -141,7 +147,9 @@ describe('QueryResult', () => {
     });
 
     it('loading -> error -> error', () => {
-      const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+      const result = new QueryResult(DefaulQueryConfigForTest, {
+        refetch() {},
+      });
       result.toLoading();
       let value = result.getValue();
       expect(value.isLoading).toBeTrue();
@@ -159,7 +167,9 @@ describe('QueryResult', () => {
       expect(value.failureCount).toBe(2);
     });
     it('loading -> error -> success', () => {
-      const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+      const result = new QueryResult(DefaulQueryConfigForTest, {
+        refetch() {},
+      });
       result.toLoading();
       let value = result.getValue();
       expect(value.isLoading).toBeTrue();
@@ -174,7 +184,9 @@ describe('QueryResult', () => {
       expect(value.data).not.toBeUndefined();
     });
     it('loading -> error -> success -> error', () => {
-      const result = new QueryResult(DefaulQueryConfigForTest, { refeth() {} });
+      const result = new QueryResult(DefaulQueryConfigForTest, {
+        refetch() {},
+      });
       result.toLoading();
       let value = result.getValue();
       expect(value.isLoading).toBeTrue();
@@ -203,7 +215,7 @@ describe('QueryResult', () => {
           ...DefaulQueryConfigForTest,
           initialData: initData,
         },
-        { refeth() {} }
+        { refetch() {} }
       );
       result.toIdle();
       const value = result.getValue();
@@ -217,7 +229,7 @@ describe('QueryResult', () => {
           ...DefaulQueryConfigForTest,
           initialData: () => initData,
         },
-        { refeth() {} }
+        { refetch() {} }
       );
       result.toIdle();
       const value = result.getValue();
@@ -232,7 +244,7 @@ describe('QueryResult', () => {
           initialData: initData,
           initialDataUpdatedAt: now,
         },
-        { refeth() {} }
+        { refetch() {} }
       );
       result.toIdle();
       const value = result.getValue();
@@ -246,7 +258,7 @@ describe('QueryResult', () => {
           ...DefaulQueryConfigForTest,
           initialDataUpdatedAt: now,
         },
-        { refeth() {} }
+        { refetch() {} }
       );
       result.toIdle();
       const value = result.getValue();
@@ -260,7 +272,7 @@ describe('QueryResult', () => {
           ...DefaulQueryConfigForTest,
           placeholderData: () => data,
         },
-        { refeth() {} }
+        { refetch() {} }
       );
       result.toLoading();
       const val = result.getValue();
@@ -276,7 +288,7 @@ describe('QueryResult', () => {
           initialData: data,
           placeholderData: placeholder,
         },
-        { refeth() {} }
+        { refetch() {} }
       );
       result.toLoading();
       const val = result.getValue();

@@ -82,7 +82,7 @@ export class Query<
     });
     this.arg$ = new BehaviorSubject<any>(initialArgs);
     this.result$ = new QueryResult<TQueryData, TError, TData>(this.config, {
-      refeth: () => this.refeth(),
+      refetch: () => this.refetch(),
     });
     const emitter$ = this.createEmitter();
     this.loader$ = this.createLoader(emitter$);
@@ -92,7 +92,7 @@ export class Query<
     this.arg$.next(arg);
   }
 
-  refeth() {
+  refetch() {
     this.refetch$.next(null);
   }
 

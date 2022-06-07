@@ -73,7 +73,7 @@ describe('Query', () => {
     query.subscribe((res) => {});
     const resultBeforeRefetch = query.lastResult;
     tick(1);
-    query.refeth();
+    query.refetch();
     const lastResult = query.lastResult;
     expect(resultBeforeRefetch).not.toEqual(lastResult);
     discardPeriodicTasks();
@@ -517,7 +517,7 @@ describe('Query', () => {
       gcPlanner
     );
     query.subscribe((res) => {});
-    query.lastResult.query.refeth();
+    query.lastResult.query.refetch();
     expect(src.calls.count()).toBe(2);
     discardPeriodicTasks();
   }));
@@ -551,7 +551,7 @@ describe('Query', () => {
     );
     query.subscribe((res) => {});
     const prevData = query.lastResult.data;
-    query.refeth();
+    query.refetch();
     tick(11000);
     const curData = query.lastResult.data;
     expect(curData).toEqual(prevData);
