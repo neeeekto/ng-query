@@ -27,17 +27,17 @@ import { QueryTrigger } from './query-trigger';
 import { IQueryResult } from './types/query-result.type';
 import { Key } from './types/key.type';
 import { IGcPlaner } from './types/gc.type';
+import { IQueryObservable } from './types/query.type';
 
-export class Query<
-  TQueryData = any,
-  TError = unknown,
-  TData = TQueryData
-> extends Observable<IQueryResult<TQueryData, TError, TData>> {
+// То что отвечает за запросы, резапросы, их обнуления и планировку очистки
+export class Query<TQueryData = any, TError = unknown, TData = TQueryData>
+  extends Observable<IQueryResult<TQueryData, TError, TData>>
+  implements IQueryObservable<TQueryData, TError, TData>
+{
   private subscribers = 0;
 
   private readonly loader$: Observable<any>;
-  private readonly arg$: BehaviorSubject<any>;
-  private readonly refetch$ = new Subject<any>();
+  private readonly refetch$ = new BehaviorSubject<any>(null);
   private readonly onSubscribe$ = new Subject<any>();
   private readonly result$: QueryResult<TQueryData, TError, TData>;
   private loaderSubscription?: Subscription;
@@ -45,8 +45,7 @@ export class Query<
   constructor(
     public readonly key: Key,
     private readonly config: QueryConfig<TQueryData, TData>,
-    private readonly srcFactory: (args: any) => Observable<TQueryData>,
-    initialArgs: any,
+    private src: () => Observable<TQueryData>,
     private readonly trigger$: QueryTrigger,
     private readonly gcPlanner: IGcPlaner
   ) {
@@ -80,16 +79,11 @@ export class Query<
       this.onSubscribe$.next(null);
       return resultSubscription;
     });
-    this.arg$ = new BehaviorSubject<any>(initialArgs);
     this.result$ = new QueryResult<TQueryData, TError, TData>(this.config, {
       refetch: () => this.refetch(),
     });
     const emitter$ = this.createEmitter();
     this.loader$ = this.createLoader(emitter$);
-  }
-
-  setArg(arg: any) {
-    this.arg$.next(arg);
   }
 
   refetch() {
@@ -98,6 +92,15 @@ export class Query<
 
   update(data: TData) {
     this.toSuccess(data);
+  }
+
+  setSrc(newSrc: () => Observable<TQueryData>) {
+    if (this.src !== newSrc) {
+      this.src = newSrc;
+      if (this.config.refetchOnNewSrc) {
+        this.refetch$.next(null);
+      }
+    }
   }
 
   get lastResult() {
@@ -119,10 +122,6 @@ export class Query<
           }
           return true;
         })
-      ),
-      this.arg$.pipe(
-        distinctUntilChanged(this.config.argumentComparator),
-        filter(() => this.config.refetchOnArgumentChange)
       ),
       iif(
         () => !!this.config.refetchOnSubscribe,
@@ -161,7 +160,7 @@ export class Query<
       filter(() => !this.result$.value.isLoading),
       tap(() => this.result$.toLoading()),
       switchMap(() =>
-        this.srcFactory(this.arg$.value).pipe(
+        this.src().pipe(
           errorRetry,
           resultHandler,
           retryWhen((errors) => this.trigger$)

@@ -13,25 +13,19 @@ export class MutationFactory {
     private gcPlanner: GcPlanner
   ) {}
 
-  public make<TExecutorFn extends FunctionType<any, Observable<TRes>>, TRes>(
-    executor: TExecutorFn,
-    keyFactory: (...args: ArgumentTypes<TExecutorFn>) => Key
-  ) {
-    return (...args: ArgumentTypes<TExecutorFn>) => {
-      const key = keyFactory(...args);
-      const argHash = JSON.stringify(args);
-      let mutation = this.store.get(key, argHash);
-      if (mutation === undefined) {
-        mutation = new Mutation(key, () => executor(args));
-        this.gcPlanner.schedule(() => {
-          if (!mutation!.isUsed) {
-            this.store.delete(key, argHash);
-          }
-          return !mutation!.isUsed;
-        });
-        this.store.add(argHash, mutation);
-      }
-      return mutation;
-    };
+  public build<TRes>(executor: () => Observable<TRes>, key: Key) {
+    let mutation = this.store.get(key);
+    if (mutation === undefined) {
+      mutation = new Mutation(key, executor);
+      this.gcPlanner.schedule(() => {
+        if (!mutation!.isUsed) {
+          this.store.delete(key);
+        }
+        return !mutation!.isUsed;
+      });
+      this.store.add(mutation);
+    }
+    mutation.setExecutor(executor);
+    return mutation;
   }
 }

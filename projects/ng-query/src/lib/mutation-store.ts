@@ -1,28 +1,29 @@
 import { Injectable } from '@angular/core';
 import { Key } from './types/key.type';
 import { Mutation } from './mutation';
+import { Query } from './query';
+import { KeyComparator } from './key-comparator';
 
 @Injectable()
 export class MutationStore {
-  private readonly mutations = new Map<string, Mutation>();
+  private mutations: Mutation[] = [];
+  constructor(private readonly keyComparator: KeyComparator) {}
 
-  get(key: Key, argHash: string) {
-    const stringKey = [...key, argHash].join('-');
-    return this.mutations.get(stringKey);
+  public get(key: Key): Mutation | undefined {
+    return this.mutations.find((q) => this.keyComparator.isEqual(q.key, key));
   }
-
-  add(argHash: string, mutation: Mutation) {
-    const stringKey = [...mutation.key, argHash].join('-');
-    if (this.mutations.has(stringKey)) {
-      throw new Error(
-        `Mutation with key ${mutation.key} and arg hash ${argHash} already exists`
-      );
+  public add(mutation: Mutation) {
+    if (!Array.isArray(mutation.key) || mutation.key.length === 0) {
+      throw new Error(`Mutation key must be array`);
     }
-    this.mutations.set(stringKey, mutation);
+    if (this.get(mutation.key)) {
+      throw new Error(`Mutation with key ${mutation.key} already exist`);
+    }
+    this.mutations.push(mutation);
   }
-
-  delete(key: Key, argHash: string) {
-    const stringKey = [...key, argHash].join('-');
-    this.mutations.delete(stringKey);
+  public delete(...keys: Key[]) {
+    this.mutations = this.mutations.filter(
+      (q) => !keys.some((key) => this.keyComparator.isEqual(q.key, key))
+    );
   }
 }

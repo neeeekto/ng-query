@@ -26,7 +26,6 @@ describe('Query', () => {
       [],
       DefaulQueryConfigForTest,
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -40,25 +39,6 @@ describe('Query', () => {
     expect(src.calls.allArgs().some((x) => x[0] == null)).toBeTrue(); // Use correct intial arguments
     discardPeriodicTasks();
   }));
-  it('should use src factory again with correct arg if arg has been changed', fakeAsync(() => {
-    const triggerMngr = makeTriggerManager();
-    const result = 'test';
-    const src = jasmine
-      .createSpy('src')
-      .and.returnValue(new BehaviorSubject(result));
-    const query = new Query(
-      [],
-      DefaulQueryConfigForTest,
-      src,
-      null,
-      triggerMngr.trigger,
-      gcPlanner
-    );
-    query.subscribe((res) => {});
-    query.setArg(result);
-    expect(src.calls.allArgs().some((x) => x[0] == result)).toBeTrue();
-    discardPeriodicTasks();
-  }));
   it('can be re-fetched', fakeAsync(() => {
     const triggerMngr = makeTriggerManager();
     const src = () => new BehaviorSubject({ data: 1 });
@@ -66,7 +46,6 @@ describe('Query', () => {
       [],
       DefaulQueryConfigForTest,
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -85,7 +64,6 @@ describe('Query', () => {
       [],
       DefaulQueryConfigForTest,
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -111,7 +89,6 @@ describe('Query', () => {
       [],
       DefaulQueryConfigForTest,
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -129,7 +106,6 @@ describe('Query', () => {
       [],
       DefaulQueryConfigForTest,
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -148,7 +124,6 @@ describe('Query', () => {
       [],
       DefaulQueryConfigForTest,
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -168,14 +143,7 @@ describe('Query', () => {
     const src = jasmine
       .createSpy('src')
       .and.returnValue(new BehaviorSubject(1));
-    const query = new Query(
-      [],
-      config,
-      src,
-      null,
-      triggerMngr.trigger,
-      gcPlanner
-    );
+    const query = new Query([], config, src, triggerMngr.trigger, gcPlanner);
     query.subscribe((res) => {});
     expect(src.calls.count()).toBe(1);
     expect(query.lastResult.isStale()).toBeFalse();
@@ -193,14 +161,7 @@ describe('Query', () => {
     const src = jasmine
       .createSpy('src')
       .and.returnValue(new BehaviorSubject(1));
-    const query = new Query(
-      [],
-      config,
-      src,
-      null,
-      triggerMngr.trigger,
-      gcPlanner
-    );
+    const query = new Query([], config, src, triggerMngr.trigger, gcPlanner);
     query.subscribe((res) => {});
     expect(src.calls.count()).toBe(1);
     expect(query.lastResult.isStale()).toBeFalse();
@@ -218,14 +179,7 @@ describe('Query', () => {
     const src = jasmine
       .createSpy('src')
       .and.returnValue(new BehaviorSubject(1));
-    const query = new Query(
-      [],
-      config,
-      src,
-      null,
-      triggerMngr.trigger,
-      gcPlanner
-    );
+    const query = new Query([], config, src, triggerMngr.trigger, gcPlanner);
     query.subscribe((res) => {});
     expect(src.calls.count()).toBe(1);
     expect(query.lastResult.isStale()).toBeFalse();
@@ -243,14 +197,7 @@ describe('Query', () => {
     const src = jasmine
       .createSpy('src')
       .and.returnValue(new BehaviorSubject(1));
-    const query = new Query(
-      [],
-      config,
-      src,
-      null,
-      triggerMngr.trigger,
-      gcPlanner
-    );
+    const query = new Query([], config, src, triggerMngr.trigger, gcPlanner);
     query.subscribe((res) => {});
     expect(src.calls.count()).toBe(1);
     expect(query.lastResult.isStale()).toBeFalse();
@@ -259,97 +206,7 @@ describe('Query', () => {
     expect(src.calls.count()).toBe(2);
     discardPeriodicTasks();
   }));
-  it('should re-fetch data if arg changed and refetchOnArgumentChange is true', fakeAsync(() => {
-    const config: QueryConfig = {
-      ...DefaulQueryConfigForTest,
-      refetchOnArgumentChange: true,
-    };
-    const triggerMngr = makeTriggerManager(config);
-    const src = jasmine
-      .createSpy('src')
-      .and.returnValue(new BehaviorSubject(1));
-    const query = new Query(
-      [],
-      config,
-      src,
-      null,
-      triggerMngr.trigger,
-      gcPlanner
-    );
-    query.subscribe((res) => {});
-    expect(src.calls.count()).toBe(1);
-    expect(query.lastResult.isStale()).toBeFalse();
-    query.setArg({});
-    expect(src.calls.count()).toBe(2);
-    discardPeriodicTasks();
-  }));
-  it('should not re-fetch data if arg changed and refetchOnArgumentChange is false', fakeAsync(() => {
-    const config: QueryConfig = {
-      ...DefaulQueryConfigForTest,
-      refetchOnArgumentChange: false,
-    };
-    const triggerMngr = makeTriggerManager(config);
-    const src = jasmine
-      .createSpy('src')
-      .and.returnValue(new BehaviorSubject(1));
-    const query = new Query(
-      [],
-      config,
-      src,
-      null,
-      triggerMngr.trigger,
-      gcPlanner
-    );
-    query.subscribe((res) => {});
-    expect(src.calls.count()).toBe(1);
-    expect(query.lastResult.isStale()).toBeFalse();
-    query.setArg({});
-    expect(src.calls.count()).toBe(1);
-    discardPeriodicTasks();
-  }));
-  it('should not re-fetch data if arg link not changed', fakeAsync(() => {
-    const triggerMngr = makeTriggerManager();
-    const src = jasmine
-      .createSpy('src')
-      .and.returnValue(new BehaviorSubject(1));
-    const query = new Query(
-      [],
-      DefaulQueryConfigForTest,
-      src,
-      'test',
-      triggerMngr.trigger,
-      gcPlanner
-    );
-    query.subscribe((res) => {});
-    expect(src.calls.count()).toBe(1);
-    expect(query.lastResult.isStale()).toBeFalse();
-    query.setArg('test');
-    expect(src.calls.count()).toBe(1);
-    discardPeriodicTasks();
-  }));
-  it('should use argumentComparator', fakeAsync(() => {
-    const triggerMngr = makeTriggerManager();
-    const src = jasmine
-      .createSpy('src')
-      .and.returnValue(new BehaviorSubject(1));
-    const query = new Query(
-      [],
-      {
-        ...DefaulQueryConfigForTest,
-        argumentComparator: (prev, next) => prev.a === next.a,
-      },
-      src,
-      { a: 1 },
-      triggerMngr.trigger,
-      gcPlanner
-    );
-    query.subscribe((res) => {});
-    expect(src.calls.count()).toBe(1);
-    expect(query.lastResult.isStale()).toBeFalse();
-    query.setArg({ a: 1 });
-    expect(src.calls.count()).toBe(1);
-    discardPeriodicTasks();
-  }));
+
   it('should re-fetch data if there is new subscriber and refetchOnSubscribe is true and query is stale', fakeAsync(() => {
     const triggerMngr = makeTriggerManager();
     const src = jasmine
@@ -359,7 +216,6 @@ describe('Query', () => {
       [],
       { ...DefaulQueryConfigForTest, refetchOnSubscribe: true },
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -380,7 +236,6 @@ describe('Query', () => {
       [],
       { ...DefaulQueryConfigForTest, refetchOnSubscribe: true },
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -401,11 +256,12 @@ describe('Query', () => {
       [],
       { ...DefaulQueryConfigForTest, refetchOnSubscribe: false },
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
-    query.subscribe((res) => {});
+    query.subscribe((res) => {
+      console.log(res.data);
+    });
     expect(src.calls.count()).toBe(1);
     expect(query.lastResult.isStale()).toBeFalse();
     tick(11000);
@@ -420,7 +276,6 @@ describe('Query', () => {
       [],
       { ...DefaulQueryConfigForTest, refetchOnSubscribe: 'always' },
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -440,7 +295,6 @@ describe('Query', () => {
       [],
       { ...DefaulQueryConfigForTest, refetchOnSubscribe: 'always' },
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -468,7 +322,6 @@ describe('Query', () => {
         retryDelay: (failureCount) => failureCount * 1000,
       },
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -495,7 +348,6 @@ describe('Query', () => {
         retry,
       },
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -512,7 +364,6 @@ describe('Query', () => {
       [],
       DefaulQueryConfigForTest,
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -528,7 +379,6 @@ describe('Query', () => {
       [],
       DefaulQueryConfigForTest,
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -545,7 +395,6 @@ describe('Query', () => {
       [],
       DefaulQueryConfigForTest,
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -565,7 +414,6 @@ describe('Query', () => {
       [],
       DefaulQueryConfigForTest,
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -585,7 +433,6 @@ describe('Query', () => {
       [],
       DefaulQueryConfigForTest,
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );
@@ -604,7 +451,6 @@ describe('Query', () => {
       [],
       DefaulQueryConfigForTest,
       src,
-      null,
       triggerMngr.trigger,
       gcPlanner
     );

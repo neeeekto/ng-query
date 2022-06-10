@@ -6,9 +6,9 @@ import { Query } from './query';
 import { QueryTrigger } from './query-trigger';
 import { GlobalTriggers } from './global-triggers';
 import { QueryStore } from './query-store';
-import { ArgumentTypes, FunctionType } from './types/common.type';
 import { QueryConfigFactory } from './query-config-factory';
 import { GcPlanner } from './gc-planner';
+import { IQueryObservable } from './types/query.type';
 
 @Injectable()
 export class QueryFactory {
@@ -19,42 +19,31 @@ export class QueryFactory {
     private readonly gcPlanner: GcPlanner
   ) {}
 
-  public make<
-    TSrcFactory extends FunctionType<any, Observable<TRes>>,
-    TRes,
-    TData = TRes,
-    TError = unknown
-  >(
-    srcFactory: TSrcFactory,
-    keyFactory: (...args: ArgumentTypes<TSrcFactory>) => Key,
+  public build<TRes, TData = TRes, TError = unknown>(
+    src: () => Observable<TRes>,
+    key: Key,
     config?: Partial<QueryConfig<TRes, TData>>
   ) {
-    return (
-      ...args: ArgumentTypes<TSrcFactory>
-    ): Query<TRes, TError, TData> => {
-      const key = keyFactory(...args);
-      let exist: Query<TRes, TError, TData> | undefined =
-        this.queryStore.get(key);
-      if (!exist) {
-        const queryConfig = this.queryConfigFactory.make(config);
-        const trigger = new QueryTrigger(
-          queryConfig,
-          this.globalTriggers.focus$,
-          this.globalTriggers.blur$,
-          this.globalTriggers.online$
-        );
-        exist = new Query<TRes, TError, TData>(
-          key,
-          queryConfig,
-          srcFactory,
-          args,
-          trigger,
-          this.gcPlanner
-        );
-        this.queryStore.add(exist);
-      }
-      exist.setArg(args);
-      return exist;
-    };
+    let exist: Query<TRes, TError, TData> | undefined =
+      this.queryStore.get(key);
+    if (!exist) {
+      const queryConfig = this.queryConfigFactory.make(config);
+      const trigger = new QueryTrigger(
+        queryConfig,
+        this.globalTriggers.focus$,
+        this.globalTriggers.blur$,
+        this.globalTriggers.online$
+      );
+      exist = new Query<TRes, TError, TData>(
+        key,
+        queryConfig,
+        src,
+        trigger,
+        this.gcPlanner
+      );
+      this.queryStore.add(exist);
+    }
+    exist.setSrc(src);
+    return exist as IQueryObservable<TRes, TError, TData>;
   }
 }

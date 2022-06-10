@@ -11,11 +11,17 @@ export class Mutation<TRes = any> extends Observable<Mutation<TRes>> {
 
   constructor(
     public readonly key: Key,
-    private readonly executor: () => Observable<TRes>
+    private executor: () => Observable<TRes>
   ) {
     super((subscriber) => {
       return this.status$.subscribe(subscriber);
     });
+  }
+
+  setExecutor(fn: () => Observable<TRes>) {
+    if (this.executor !== fn) {
+      this.executor = fn;
+    }
   }
 
   // For GC

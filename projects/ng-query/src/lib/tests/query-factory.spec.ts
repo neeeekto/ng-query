@@ -33,11 +33,8 @@ describe('QueryFactory', () => {
   });
 
   it('should return query resolver', () => {
-    const resolver = makeQueryFactory().make(
-      () => of(1),
-      () => [1]
-    );
-    expect(typeof resolver).toBe('function');
+    const resolver = makeQueryFactory().build(() => of(1), [1]);
+    expect(typeof resolver).toBe('object');
   });
   it('should use config factory with config from arg', () => {
     const configMaker = jasmine
@@ -52,11 +49,7 @@ describe('QueryFactory', () => {
       gcCollector as any
     );
     const customConfig = { cacheTime: 1 };
-    const resolver = factory.make(
-      () => of(1),
-      () => [1],
-      customConfig
-    );
+    const resolver = () => factory.build(() => of(1), [1], customConfig);
     resolver();
     expect(configMaker.calls.any()).toBeTrue();
     expect(configMaker.calls.argsFor(0)[0]).toEqual(customConfig);
@@ -64,38 +57,30 @@ describe('QueryFactory', () => {
 
   it('should create key', () => {
     const key = [1, 2, 3];
-    const resolver = makeQueryFactory().make(
-      () => of(1),
-      () => key
-    );
+    const resolver = () => makeQueryFactory().build(() => of(1), key);
     const query = resolver();
     expect(keyComparator.isEqual(query.key, key)).toBeTrue();
   });
   it('should create query if query is not exists', () => {
-    const resolver = makeQueryFactory().make(
-      () => of(1),
-      () => [1]
-    );
+    const resolver = () => makeQueryFactory().build(() => of(1), [1]);
     expect(queryStore.getAll().length).toBe(0);
     resolver();
     expect(queryStore.getAll().length).toBe(1);
   });
   it('should return exists query if query exists', () => {
-    const resolver = makeQueryFactory().make(
-      () => of(1),
-      () => [1]
-    );
+    const resolver = () => makeQueryFactory().build(() => of(1), [1]);
     const query1 = resolver();
     const query2 = resolver();
     expect(query1).toBe(query2);
   });
-  it('should change args if query exists', () => {
+  it('should re-fetch if query src changed', () => {
     const src = jasmine.createSpy().and.callFake((arg: number) => of(arg));
-    const resolver = makeQueryFactory().make(src, () => [1]);
+    const resolver = (arg: number) =>
+      makeQueryFactory().build(() => src(arg), [1], { refetchOnNewSrc: true });
     resolver(1).subscribe();
     resolver(2).subscribe();
     expect(src.calls.count()).toBe(2);
-    expect(src.calls.argsFor(0)[0]).toEqual([1]);
-    expect(src.calls.argsFor(1)[0]).toEqual([2]);
+    expect(src.calls.argsFor(0)[0]).toEqual(1);
+    expect(src.calls.argsFor(1)[0]).toEqual(2);
   });
 });
