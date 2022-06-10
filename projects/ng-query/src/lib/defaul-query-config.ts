@@ -6,11 +6,11 @@ export const DefaulQueryConfig: QueryBaseConfig = {
   cacheTime: DEFAULT_CACHE_TIME,
   refetchInterval: false,
   refetchIntervalInBackground: false,
-  refetchOnArgumentChange: true,
   refetchOnReconnect: true,
   refetchOnSubscribe: true,
   refetchOnWindowFocus: true,
   retry: 3,
   retryDelay: 1000,
   staleTime: 10000,
+  refetchOnNewSrc: false,
 };
