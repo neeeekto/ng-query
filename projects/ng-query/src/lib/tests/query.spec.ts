@@ -252,6 +252,7 @@ describe('Query', () => {
     const src = jasmine
       .createSpy('src')
       .and.returnValue(new BehaviorSubject(1));
+
     const query = new Query(
       [],
       { ...DefaulQueryConfigForTest, refetchOnSubscribe: false },
@@ -259,9 +260,7 @@ describe('Query', () => {
       triggerMngr.trigger,
       gcPlanner
     );
-    query.subscribe((res) => {
-      console.log(res.data);
-    });
+    query.subscribe((res) => {});
     expect(src.calls.count()).toBe(1);
     expect(query.lastResult.isStale()).toBeFalse();
     tick(11000);
@@ -370,6 +369,23 @@ describe('Query', () => {
     query.subscribe((res) => {});
     query.lastResult.query.refetch();
     expect(src.calls.count()).toBe(2);
+    discardPeriodicTasks();
+  }));
+  it('should ignore refetch flow if there are no subscribers', fakeAsync(() => {
+    const triggerMngr = makeTriggerManager();
+    const src = jasmine.createSpy('src').and.returnValue(of(1));
+    const query = new Query(
+      [],
+      DefaulQueryConfigForTest,
+      src,
+      triggerMngr.trigger,
+      gcPlanner
+    );
+    const subsc = query.subscribe((res) => {});
+    subsc.unsubscribe();
+    expect(query.lastResult.isFetched).toBeTrue();
+    query.refetch();
+    expect(src.calls.count()).toBe(1);
     discardPeriodicTasks();
   }));
   it('should set cancel state if prev state was loading and not subscribers', fakeAsync(() => {

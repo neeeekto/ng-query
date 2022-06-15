@@ -157,7 +157,7 @@ export class Query<TQueryData = any, TError = unknown, TData = TQueryData>
       error: (err) => this.result$.toError(err, true),
     });
     return emitter$.pipe(
-      filter(() => !this.result$.value.isLoading),
+      filter(() => !this.result$.value.isLoading && this.subscribers > 0),
       tap(() => this.result$.toLoading()),
       switchMap(() =>
         this.src().pipe(
