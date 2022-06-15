@@ -11,6 +11,13 @@ export class QueryStore {
   public get(key: Key): Query<any, any, any> | undefined {
     return this.queries.find((q) => this.keyComparator.isEqual(q.key, key));
   }
+
+  public find(key: Key): Query<any, any, any>[] {
+    return this.queries.filter((q) =>
+      this.keyComparator.partialEqual(q.key, key)
+    );
+  }
+
   public add(query: Query<any, any, any>) {
     if (!Array.isArray(query.key) || query.key.length === 0) {
       throw new Error(`Query key must be array`);
