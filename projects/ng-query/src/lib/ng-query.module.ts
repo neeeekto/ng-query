@@ -11,6 +11,7 @@ import { GlobalTriggers } from './global-triggers';
 import { GcPlanner } from './gc-planner';
 import { KeyComparator } from './key-comparator';
 import { MutationFactory } from './mutation-factory';
+import { MutationStore } from './mutation-store';
 
 @NgModule({
   declarations: [],
@@ -37,6 +38,7 @@ export class NgQueryModule {
         GcPlanner,
         KeyComparator,
         MutationFactory,
+        MutationStore,
       ],
     };
   }
