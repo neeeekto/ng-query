@@ -46,6 +46,11 @@ export class QueryResult<
     this.next(this.makeResult());
   }
 
+  toWaitUpdate() {
+    this._dataUpdatedAt = 0;
+    this.next(this.makeResult());
+  }
+
   toError(error: TError, final: boolean = false) {
     if (final) {
       this._status = 'error';

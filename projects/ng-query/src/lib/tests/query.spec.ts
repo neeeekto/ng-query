@@ -476,4 +476,22 @@ describe('Query', () => {
     expect(query.lastResult.status).toBe('success');
     discardPeriodicTasks();
   }));
+  it('should refresh if query has no subscribers but was used', fakeAsync(() => {
+    const gcPlanner = new GcPlanerMock();
+    const triggerMngr = makeTriggerManager();
+    const src = jasmine.createSpy('src').and.returnValue(of(1));
+    const query = new Query(
+      [],
+      DefaulQueryConfigForTest,
+      src,
+      triggerMngr.trigger,
+      gcPlanner
+    );
+    query.subscribe((res) => {}).unsubscribe();
+    expect(query.lastResult.status).toBe('success');
+    query.refetch();
+    query.subscribe();
+    expect(src.calls.count()).toBe(2);
+    discardPeriodicTasks();
+  }));
 });

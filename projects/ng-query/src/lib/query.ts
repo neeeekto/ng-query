@@ -87,7 +87,11 @@ export class Query<TQueryData = any, TError = unknown, TData = TQueryData>
   }
 
   refetch() {
-    this.refetch$.next(null);
+    if (this.subscribers === 0) {
+      this.result$.toWaitUpdate();
+    } else {
+      this.refetch$.next(null);
+    }
   }
 
   update(data: TData) {
