@@ -14,9 +14,9 @@ export class MutationFactory {
   ) {}
 
   public build<TRes>(executor: () => Observable<TRes>, key: Key) {
-    let mutation = this.store.get(key);
+    let mutation = this.store.get(key) as Mutation<TRes>;
     if (mutation === undefined) {
-      mutation = new Mutation(key, executor);
+      mutation = new Mutation<TRes>(key, executor);
       this.gcPlanner.schedule(() => {
         if (!mutation!.isUsed) {
           this.store.delete(key);
