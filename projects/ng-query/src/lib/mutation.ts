@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, tap } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { Key } from './types/key.type';
 
@@ -29,15 +29,25 @@ export class Mutation<TRes = any> extends Observable<Mutation<TRes>> {
     return this.status$.observed;
   }
 
+  asObservableExecutor() {
+    return this.run();
+  }
+
   execute() {
-    this.toLoading();
-    this.executor()
-      .pipe()
-      .subscribe({
-        next: () => this.toSuccess(),
-        error: () => this.toError(),
-      });
+    this.run().pipe(take(1)).subscribe();
     return this.pipe(take(1));
+  }
+
+  private run() {
+    this.toLoading();
+    return this.executor().pipe(
+      tap({
+        next: (res) => {
+          this.toSuccess();
+        },
+        error: () => this.toError(),
+      })
+    );
   }
 
   private toLoading() {
